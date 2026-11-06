@@ -1,0 +1,724 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Try small language models locally in your browser with WebGPU, WebAssembly or built-in browser AI."><title>Browser AI Playground</title>
+<style>
+:root{color-scheme:dark;--bg:#090d13;--p:#111820;--p2:#161f2a;--ln:#2b3949;--fg:#e7edf4;--mut:#91a2b5;--g:#52d273;--a:#f5bd4f;--r:#ff6b6b;--b:#5aa9ff;--v:#b69cff}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg)}body{font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}button,select,textarea{font:inherit;color:inherit}.shell{min-height:100dvh;display:grid;grid-template-columns:minmax(310px,390px) 1fr}.side{padding:16px;border-right:1px solid var(--ln);background:var(--p);overflow:auto}.main{min-width:0;display:flex;flex-direction:column;height:100dvh}.title{display:flex;align-items:center;gap:9px}.title h1{font-size:16px;margin:0}.live{width:9px;height:9px;background:var(--g);border-radius:50%;box-shadow:0 0 12px var(--g)}.card{border:1px solid var(--ln);background:var(--p2);border-radius:10px;padding:12px;margin:10px 0}.card h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--mut);margin:0 0 9px}.row{display:flex;justify-content:space-between;gap:10px;padding:3px 0}.row span:first-child{color:var(--mut)}.value{text-align:right;word-break:break-word}.api{display:flex;gap:9px;margin:9px 0}.dot{width:8px;height:8px;border-radius:50%;margin-top:6px;background:var(--r);flex:none}.dot.on{background:var(--g)}.dot.info{background:#687788}.api small,.native small{color:var(--mut);display:block}.warning{color:var(--a);font-size:12px}.native{opacity:.78;border:1px dashed #566579;border-radius:8px;padding:10px}.native a,.browser-note a{color:var(--b)}.fitrow{border-top:1px solid var(--ln);padding:9px 0}.fitrow:first-of-type{border:0}.fithead{display:flex;justify-content:space-between;gap:8px}.fit{font-weight:700;font-size:11px;text-transform:uppercase}.good{color:var(--g)}.caution{color:var(--a)}.bad{color:var(--r)}.fitrow small{display:block;color:var(--mut);margin-top:3px}.tag{display:inline-block;border:1px solid var(--ln);border-radius:99px;padding:2px 7px;margin:2px;font-size:11px}.yes{color:var(--g);border-color:#2d7140}.maybe{color:var(--a);border-color:#715a2d}.no{color:var(--r);border-color:#713737}.tiny{font-size:11px;color:var(--mut)}details summary{cursor:pointer;color:var(--b)}pre{font-size:10px;white-space:pre-wrap;color:#b9c8d8;max-height:420px;overflow:auto;background:#090d13;padding:8px;border-radius:6px}
+.top{padding:12px 16px 8px;border-bottom:0;background:var(--p);display:flex;gap:8px;flex-wrap:wrap}.top select{max-width:390px;min-width:0;flex:1 1 260px;background:var(--p2);border:1px solid var(--ln);border-radius:7px;padding:8px}.btn{background:#263547;border:1px solid #3a4b5e;border-radius:7px;padding:8px 11px;cursor:pointer;white-space:nowrap}.btn.primary{background:#176b35;border-color:#268c49}.btn:disabled{opacity:.45;cursor:not-allowed}.browser-note{padding:0 16px 8px;background:var(--p);font-size:11px;color:var(--mut);border-bottom:1px solid var(--ln)}.download{padding:10px 16px;background:#101720;border-bottom:1px solid var(--ln);font-size:12px}.download strong{color:var(--b)}.bar{height:4px;background:#223040}.bar>div{height:100%;width:0;background:var(--b);transition:width .2s}.metrics{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--ln);background:#0c1219}.metric{padding:8px 12px;border-right:1px solid var(--ln)}.metric:last-child{border:0}.metric b{display:block}.metric span{font-size:10px;color:var(--mut);text-transform:uppercase}.prompts{padding:9px 16px;border-bottom:1px solid var(--ln);display:flex;gap:7px;overflow:auto}.chip{white-space:nowrap;border:1px solid var(--ln);background:var(--p2);border-radius:99px;padding:5px 9px;cursor:pointer}.chip b{color:var(--v);font-size:10px;text-transform:uppercase}.chat{flex:1;min-height:100px;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:11px}.msg{max-width:min(760px,92%);padding:10px 13px;border-radius:13px;white-space:pre-wrap;word-break:break-word}.user{align-self:flex-end;background:#195fae}.bot{align-self:flex-start;background:var(--p2);border:1px solid var(--ln)}.sys{align-self:center;text-align:center;color:var(--mut);font-size:12px}.msgmetrics{font-size:11px;color:var(--mut);margin-top:7px;padding-top:6px;border-top:1px solid var(--ln);display:flex;gap:10px;flex-wrap:wrap}.compose{width:100%;padding:11px 16px calc(11px + env(safe-area-inset-bottom));border-top:1px solid var(--ln);background:var(--p);display:flex;gap:8px;align-items:flex-end}.compose textarea{flex:1 1 auto;min-width:0;resize:none;max-height:110px;background:#0b1118;border:1px solid var(--ln);border-radius:9px;padding:9px;min-height:42px}.compose .btn{flex:0 0 auto;max-width:72px}
+@media(max-width:780px){.shell{display:block}.side{border:0;border-bottom:1px solid var(--ln);padding:10px 12px}.main{height:auto}.top{position:sticky;top:0;z-index:3;padding:9px 10px 6px}.top select{flex:1 1 100%;width:100%;max-width:none}.top .btn{flex:1 1 calc(50% - 4px)}.browser-note{padding:0 10px 7px}.download{padding:8px 11px}.metrics{grid-template-columns:repeat(2,1fr)}.metric.lead{grid-column:span 2}.metric:nth-child(2){border-right:0}.prompts{padding:8px 10px}.chat{flex:none;min-height:110px;max-height:45dvh;padding:10px}.compose{position:sticky;bottom:0;z-index:4;padding:8px 8px calc(8px + env(safe-area-inset-bottom));gap:6px;box-shadow:0 -7px 18px var(--bg)}.compose textarea{width:calc(100% - 62px)}.compose .btn{width:56px;padding:8px 5px}.msg{max-width:95%}}@media(min-width:781px){details.cards>summary{display:none}}
+.run-status{padding:8px 16px;overflow-wrap:anywhere;color:var(--mut)}.preview{margin:0 16px 8px}.preview pre{font:13px/1.5 system-ui;max-height:310px}.metric b{overflow-wrap:anywhere;font-size:13px}.compose textarea{max-height:240px}.msgmetrics{white-space:normal}button:focus-visible,summary:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+@media(max-width:780px){.side .title h1{font-size:14px}.main{min-height:calc(100dvh - 72px)}.run-status{padding:8px 10px}.preview{margin:0 10px 8px}.top{position:static}.chat{max-height:none;min-height:160px;overflow:visible}.prompts{flex-wrap:wrap;max-height:88px;overflow:auto}.chip{max-width:100%;overflow:hidden;text-overflow:ellipsis}.compose textarea{font-size:16px}.browser-note{max-height:72px;overflow:auto}.metric{padding:7px 10px}}
+[hidden]{display:none!important}.examples>summary{padding:5px 9px;border:1px solid var(--ln);border-radius:99px;color:var(--mut)}.examples[open]{flex-basis:100%}.examples[open]>summary{width:fit-content}.examples-list{display:flex;flex-wrap:wrap;gap:7px;padding-top:8px}.prompts{flex-wrap:wrap;align-items:flex-start;overflow:visible}.bar{flex-shrink:0}
+.shell:has(.cards:not([open])){grid-template-columns:1fr}.side:has(.cards:not([open])){display:flex;align-items:center;justify-content:space-between;gap:12px;border-right:0;border-bottom:1px solid var(--ln);padding:12px 16px}.shell:has(.cards:not([open])) .main{height:calc(100dvh - 55px)}details.cards>summary{display:list-item}.side .browser-note{padding:12px 0}.chat>.sys:only-child{margin:auto;max-width:320px;font-size:14px;line-height:1.7}.top #load{flex:0 0 auto}
+@media(max-width:780px){.side:has(.cards:not([open])){padding:10px 12px}.side .title h1{font-size:12px}.cards>summary{font-size:12px}.shell:has(.cards:not([open])) .main{height:auto;min-height:calc(100dvh - 45px)}.prompts{max-height:none;overflow:visible}.chat{flex:1 0 auto}.chat>.sys:only-child{padding:24px 12px}.top #load{flex:1 1 100%}}
+.btn.stop{background:#7f1d1d;border-color:#b91c1c;color:#fff}#clear{color:var(--mut)}.check{margin-top:6px;font-size:12px;font-weight:600}.check.pass{color:#6ee7a0}.check.fail{color:#ff9b8a}.check.not-checked{color:var(--mut)}</style></head><body><div class="shell">
+<aside class="side"><div class="title"><span class="live"></span><h1>Browser AI Playground</h1></div><details class="cards"><summary>Device details</summary><div>
+<div class="browser-note" id="browserNote"></div>
+<section class="card"><h2>Results</h2><button class="btn" id="export" disabled>Export JSON</button></section>
+<section class="card"><h2>Detected hardware</h2><div id="hardware"></div><p class="warning">Hardware identity and memory may be hidden. API limits are not free VRAM.</p><details><summary>Raw browser/device capabilities</summary><pre id="raw">Collecting…</pre></details></section>
+<section class="card"><h2>Available to this page</h2><div id="apis"></div></section>
+<section class="card"><h2>Native app possibility</h2><div id="native"></div></section>
+<section class="card"><h2>Hardware-fit heuristics</h2><p class="warning">Non-authoritative guesses, not measured fit or tested task capabilities. “Good” and “Struggles” below are broad expectations, not results. Browser limits do not establish native hardware ceilings.</p><div id="fits"></div></section>
+<section class="card"><h2>Strengths / limits</h2><div id="abilities"></div></section>
+</div></details></aside>
+<main class="main"><div class="top"><select id="model" aria-label="Model and backend" disabled></select><button class="btn primary" id="load" disabled>Load selected</button><button class="btn" id="remove" title="Remove this model's local download" disabled hidden>Remove</button></div><div class="download" id="download" role="status">Probing this browser…</div><div class="bar" hidden><div id="progress"></div></div>
+<div class="metrics" hidden><div class="metric lead"><b id="mWrite">—</b><span id="writeLabel">Writing speed</span></div><div class="metric"><b id="mElapsed">—</b><span>Total response time</span></div><div class="metric"><b id="mTtft">—</b><span id="firstLabel">First streamed output</span></div><div class="metric"><b id="mTokens">—</b><span>Output tokens</span></div><div class="metric"><b id="mContext">—</b><span>Context / usage evidence</span></div></div>
+<div class="run-status" id="runStatus" role="status" hidden></div>
+<div class="prompts" id="prompts"><button class="chip" id="clear" disabled hidden>↺ New conversation</button><details class="examples" id="examples"><summary>More examples</summary><div class="examples-list" id="morePrompts"></div></details></div><details class="preview" id="preview" hidden><summary>Read full prompt</summary><pre id="promptPreview">Select a template or type below.</pre></details>
+<div class="chat" id="chat"><div class="msg sys">Load a model to begin. Then try an example or write your own prompt. Everything runs on this device.</div></div><div class="compose"><textarea id="input" aria-label="Prompt" placeholder="Write a prompt, or choose an example…"></textarea><button class="btn" id="send" disabled>Send</button></div></main></div>
+<script type="module">
+const $=s=>document.querySelector(s),model=$('#model'),loadBtn=$('#load'),input=$('#input'),sendBtn=$('#send'),chat=$('#chat'),prog=$('#progress');let cap={},engine=null,backend=null,selected=null,webllm=null,history=[];const SYSTEM='You are a concise and helpful assistant. Say when you are uncertain.';function freshHistory(){history=[{role:'system',content:SYSTEM}]}
+const PROMPT_OPTIONS = {
+  expectedInputs: [{type: 'text', languages: ['en']}],
+  expectedOutputs: [{type: 'text', languages: ['en']}]
+};
+let phase = 'probing', active = null, loadedModelId = null, needsFresh = false;
+const runs = [], events = [];
+const localModels = new Map();
+freshHistory();
+const WASM={key:'wasm',label:'SmolLM2 135M · CPU/WASM',id:'HuggingFaceTB/SmolLM2-135M-Instruct',p:.135,mb:140,ctx:2048,tier:-1,kind:'CPU baseline',good:'short focused answers and simple transformations',bad:'knowledge, reasoning and reliable instructions'};
+const MODELS=[{key:'qwen08',label:'Qwen3.5 0.8B',f16:'Qwen3.5-0.8B-q4f16_1-MLC',f32:'Qwen3.5-0.8B-q4f32_1-MLC',noThink:true,p:.8,mb:450,v16:1630,v32:1900,ctx:4096,tier:0,kind:'tiny GPU model',good:'short extraction, classification and rewriting',bad:'multi-step reasoning and factual recall'},{key:'qwen2',label:'Qwen3.5 2B',f16:'Qwen3.5-2B-q4f16_1-MLC',f32:'Qwen3.5-2B-q4f32_1-MLC',noThink:true,p:2,mb:1100,v16:2250,v32:2600,ctx:4096,tier:1,kind:'small GPU model',good:'multilingual chat, summaries and simple extraction',bad:'multi-step arithmetic and long documents'},{key:'ministral3',label:'Ministral 3 3B',f16:'Ministral-3-3B-Instruct-2512-BF16-q4f16_1-MLC',f32:'Ministral-3-3B-Instruct-2512-BF16-q4f32_1-MLC',p:3,mb:1950,v16:2870,v32:3540,ctx:4096,tier:2,kind:'local GPU model',good:'multilingual chat and instruction following',bad:'hard reasoning and long documents'},{key:'qwen9',label:'Qwen3.5 9B',f16:'Qwen3.5-9B-q4f16_1-MLC',f32:'Qwen3.5-9B-q4f32_1-MLC',noThink:true,p:9,mb:5060,v16:6440,v32:7550,ctx:4096,tier:3,kind:'large local GPU model',good:'stronger reasoning, multilingual chat and code',bad:'mobile stability and browser memory'}];
+const SAVINGS_PROMPT=`Heute ist der 20. Juni 2026. Ich möchte meine laufenden Kosten
+ab Juli um mindestens 25 Euro pro Monat senken. Mein Cloud-Backup
+muss erhalten bleiben. Alle anderen Dienste kann ich streichen.
+
+Hier sind meine Unterlagen:
+
+- StreamPlus: 18 Euro monatlich. Eine Kündigung bis einschließlich
+  25. Juni beendet das Abo zum 30. Juni. Ab Juli fallen dann keine
+  Kosten mehr an.
+- Cloud-Backup: 12 Euro monatlich.
+- Fitnessstudio: 30 Euro monatlich. Für ein Vertragsende am
+  30. Juni hätte die Kündigung spätestens am 15. Juni eingehen
+  müssen. Eine Kündigung heute beendet den Vertrag am 31. Juli.
+- Digitalmagazin: 9 Euro monatlich. Eine Kündigung bis
+  einschließlich 30. Juni beendet das Abo zum 30. Juni.
+- StreamPlus wurde im Juni versehentlich ein zweites Mal mit
+  18 Euro abgebucht. Eine einmalige Erstattung wurde beantragt,
+  ist aber noch nicht bestätigt.
+
+Alle regulären Beiträge werden monatlich berechnet. Es gibt
+keine weiteren Gebühren. Nutze nur die Angaben oben.
+
+Erstelle einen kurzen Handlungsvorschlag:
+1. Was muss ich bis wann kündigen, damit ich mein Sparziel
+   bereits im Juli erreiche?
+2. Wie hoch sind die regulären Monatskosten ohne Kündigungen
+   und im Juli nach deinem Vorschlag? Wie groß ist die
+   monatliche Ersparnis?
+3. Wie behandelst du die doppelte Abbuchung?
+4. Ist mein Sparziel im Juli erreicht?
+
+Antworte auf Deutsch mit höchstens 120 Wörtern.`;
+// Ordered easiest to hardest. Rules are keyword/format checks, not a quality verdict.
+const NOTICE=`Building notice: The water supply in building B will be shut off on Tuesday, 14 October, from 08:00 to 13:00 while the main valve is replaced. Please fill containers in advance if you need water during this time. The lift is not affected. After the work, the water may look brown for a few minutes; let the tap run until it is clear. Parking spaces 12–18 must be free from 07:00 for the contractor's van. Questions: facilities office, extension 4410.`;
+const BUG_CODE=`function average(numbers) {
+  let sum = 0;
+  for (let i = 1; i < numbers.length; i++) sum += numbers[i];
+  return sum / numbers.length;
+}`;
+const bullets = a => a.split('\n').filter(line => /^\s*([-*•]|\d+[.)])\s+/.test(line)).length;
+const firstJson = a => { try { return JSON.parse(a.slice(a.indexOf('{'), a.lastIndexOf('}') + 1)); } catch { return null; } };
+const SAMPLES=[
+  {name: 'Sort a list', prompt: 'Sort these words alphabetically. Reply with one word per line and nothing else: pear, apple, mango, fig, banana', rules: [
+    ['exact output: apple, banana, fig, mango, pear', a => a.trim().split(/\s*\n\s*/).join(',').toLowerCase() === 'apple,banana,fig,mango,pear']]},
+  {name: 'Summarize a notice', prompt: `Summarize this notice in exactly three short bullet points: what happens, when, and what I need to do.\n\n${NOTICE}`, rules: [
+    ['exactly three bullet points', a => bullets(a) === 3],
+    ['date: 14 October', a => /14\.?\s*(oct|10)|oct\w*\.?\s*14|tuesday/i.test(a)],
+    ['time: 08:00 to 13:00', a => /\b0?8(?:[:.]00)?\b(?![:.]\d)/i.test(a) && /\b13(?:[:.]00)?\b(?![:.]\d)|\b0?1(?:[:.]00)?\s*p\.?m\b/i.test(a)],
+    ['action: fill containers', a => /fill|container|store water/i.test(a)],
+    ['action: free parking spaces 12–18', a => /12\s*(–|-|to)\s*18/.test(a)]]},
+  {name: 'Extract a changed meeting', prompt: 'Extract the final meeting arrangement as JSON with the keys "place", "date" and "topic". Reply with JSON only.\n\n"Hi Mira, can we move our prototype review from Dresden on 12 October to Leipzig on 14 October? Same time as planned. – Jonas"', rules: [
+    ['valid JSON object', a => !!firstJson(a)],
+    ['place: Leipzig (not Dresden)', a => /leipzig/i.test(firstJson(a)?.place ?? '') && !/dresden/i.test(firstJson(a)?.place ?? '')],
+    ['date: 14 October (not 12)', a => /14/.test(String(firstJson(a)?.date ?? '')) && !/\b12\b/.test(String(firstJson(a)?.date ?? ''))],
+    ['topic: prototype review', a => /prototype/i.test(firstJson(a)?.topic ?? '')]]},
+  {name: 'Find free time', prompt: 'My working day is 09:00 to 17:00. My meetings are 09:00–10:15, 10:30–12:00, 13:00–14:30 and 15:00–15:45. What is my longest free block? Give the time range and its length.', rules: [
+    ['range: 15:45 to 17:00', a => /15[:.]45/.test(a) && /17[:.]00/.test(a)],
+    ['length: 1 h 15 min', a => /1\s*h(our)?s?\s*(and\s*)?15|75\s*min|1:15/i.test(a)]]},
+  {name: 'Fix the bug', prompt: `This function should return the average of a list, but average([2, 4, 6]) returns the wrong result. Find the bug and give the fixed function.\n\n${BUG_CODE}`, rules: [
+    ['loop no longer skips the first item', a => /let\s+i\s*=\s*0|for\s*\(\s*(const|let)\s+\w+\s+of|\.reduce\(/.test(a) && !/let\s+i\s*=\s*1\b/.test(a)],
+    ['still divides by the list length', a => /\/\s*numbers\.length/.test(a)]]},
+  {name: 'Monthly savings', prompt: SAVINGS_PROMPT, rules: [
+    ['regular costs: 69 €', a => /\b69\b/.test(a)],
+    ['July costs: 42 €', a => /\b42\b/.test(a)],
+    ['savings: 27 €', a => /\b27\b/.test(a)],
+    ['cancels the magazine', a => /magazin/i.test(a)],
+    ['goal met', a => /erreicht|achieved|\bmet\b/i.test(a) && !/nicht\s+erreicht|not\s+(be\s+|been\s+)?(achieved|met)/i.test(a)]]}
+];
+function finalAnswer(raw) {
+  let text = raw.trimStart();
+  while (text.startsWith('<think>')) {
+    const end = text.indexOf('</think>');
+    if (end < 0) return '';
+    text = text.slice(end + '</think>'.length).trimStart();
+  }
+  return '<think>'.startsWith(text) ? '' : text;
+}
+function ruleCheck(record) {
+  const sample = SAMPLES.find(item => item.prompt === record.prompt);
+  if (!sample) return null;
+  if (!['completed', 'length-limited'].includes(record.status)) return {template: sample.name, verdict: 'not checked', rules: []};
+  const rules = sample.rules.map(([rule, test]) => ({rule, pass: !!test(record.answer)}));
+  return {template: sample.name, verdict: rules.every(item => item.pass) ? 'pass' : 'fail', rules};
+}
+function writingSpeed(r) {
+  if (r.timings.backendDecodeTokensPerSecond != null) return {value: r.timings.backendDecodeTokensPerSecond, source: 'backend-reported decode'};
+  const first = r.timings.firstTokenMs ?? r.timings.firstTextMs;
+  const estimated = r.outputTokens.value == null || r.outputTokens.source.startsWith('estimate');
+  const tokens = estimated ? Math.round(r.answer.length / 4) : r.outputTokens.value;
+  const span = r.timings.elapsedMs - first;
+  if (first == null || tokens < 2 || !(span > 0)) return null;
+  // Excludes waiting for the first output, so prompt processing is not counted as writing.
+  return {value: (tokens - 1) / span * 1000, source: estimated ? 'estimate: characters / 4, after first output' : 'measured after first output'};
+}
+const esc=s=>String(s).replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x])),row=(k,v)=>`<div class="row"><span>${k}</span><span class="value">${v}</span></div>`,api=(n,on,d,i=false)=>`<div class="api"><span class="dot ${i?'info':on?'on':''}"></span><div><b>${n}</b><small>${d}</small></div></div>`;function add(r,t){let e=document.createElement('div');e.className='msg '+r;e.textContent=t;chat.append(e);chat.scrollTop=chat.scrollHeight;return e}function status(s){$('#download').innerHTML=s}function tok(s){return Math.max(1,Math.round(s.length/4))}
+function platform(){let u=navigator.userAgent,p=navigator.platform||'';if(/iPhone|iPad|iPod/.test(u)||(p==='MacIntel'&&navigator.maxTouchPoints>1))return'ios';if(/Android/.test(u))return'android';if(/Windows/.test(u))return'windows';if(/Mac/.test(p))return'macos';if(/Linux/.test(p))return'linux';return'other'}function browser(){let u=navigator.userAgent;if(/Edg\//.test(u))return'edge';if(/Firefox\//.test(u)||/FxiOS/.test(u))return'firefox';if(/CriOS/.test(u))return'chrome-ios';if(/Chrome\//.test(u))return'chrome';if(/Safari\//.test(u))return'safari';return'other'}
+const browserMeta={chrome:{name:'Chrome built-in Gemini Nano',link:'https://developer.chrome.com/docs/ai/prompt-api',detail:'Chrome supplies Gemini Nano through the Prompt API.'},edge:{name:'Edge built-in SLM',link:'https://learn.microsoft.com/en-us/microsoft-edge/web-platform/prompt-api',detail:'Edge supplies Phi-4-mini or a prerelease Aion model through its experimental Prompt API.'},firefox:{name:'Firefox local AI',link:'https://support.mozilla.org/en-US/products/firefox/artificial-intelligence',detail:'Firefox uses local or selectable models for browser features, but does not expose a general built-in chat model to ordinary webpages.'},safari:{name:'Safari',link:'https://developer.apple.com/documentation/foundationmodels',detail:'Safari does not expose Apple Foundation Models to ordinary webpages; native apps use Apple’s framework.'},'chrome-ios':{name:'Chrome on iOS',link:'https://developer.chrome.com/docs/ai/prompt-api',detail:'Chrome’s built-in foundation-model APIs are not available on iOS.'},other:{name:'This browser',link:'https://webmachinelearning.github.io/prompt-api/',detail:'No webpage-accessible built-in language model was identified.'}};
+function grade(){if(!cap.webgpu)return-1;if(cap.mobile)return 0;if((cap.ram||0)>=16&&cap.maxStorage>=1e9)return 3;if((cap.ram||0)>=8&&cap.maxStorage>=5e8)return 2;if((cap.ram||0)>=4||cap.maxStorage>=25e7)return 1;return 0}function fit(m){return m===WASM?'good':cap.grade<0?(m.tier===0?'caution':'bad'):m.tier<=cap.grade?'good':m.tier===cap.grade+1?'caution':'bad'}const fw=f=>f==='good'?'likely':f==='caution'?'risky':'unlikely';
+function objectSnapshot(obj){if(!obj)return null;let names=new Set();for(let x=obj;x&&x!==Object.prototype;x=Object.getPrototypeOf(x))for(let n of Object.getOwnPropertyNames(x))names.add(n);let out={};for(let n of [...names].sort()){if(n==='constructor'||typeof obj[n]==='function')continue;try{let v=obj[n];if(['string','number','boolean'].includes(typeof v)||v===null)out[n]=v}catch{}}return out}
+async function rawSnapshot(){let storage=null,uaData=null;if(navigator.storage?.estimate)try{storage=await navigator.storage.estimate()}catch(e){storage={error:e.message}}if(navigator.userAgentData)try{uaData={brands:navigator.userAgentData.brands,mobile:navigator.userAgentData.mobile,platform:navigator.userAgentData.platform,...await navigator.userAgentData.getHighEntropyValues(['architecture','bitness','model','platformVersion','fullVersionList','wow64'])}}catch(e){uaData={error:e.message}}return{timestamp:new Date().toISOString(),window:{secureContext:isSecureContext,crossOriginIsolated,innerWidth,innerHeight,devicePixelRatio},screen:{width:screen.width,height:screen.height,availWidth:screen.availWidth,availHeight:screen.availHeight,colorDepth:screen.colorDepth,pixelDepth:screen.pixelDepth,orientation:screen.orientation?{type:screen.orientation.type,angle:screen.orientation.angle}:null},navigator:{userAgent:navigator.userAgent,userAgentData:uaData,platform:navigator.platform,vendor:navigator.vendor,languages:navigator.languages,language:navigator.language,hardwareConcurrency:navigator.hardwareConcurrency,deviceMemory:navigator.deviceMemory??null,maxTouchPoints:navigator.maxTouchPoints,cookieEnabled:navigator.cookieEnabled,onLine:navigator.onLine,pdfViewerEnabled:navigator.pdfViewerEnabled??null},detected:{platform:cap.platform,browser:cap.browser,wasm:cap.wasm,promptAPI:cap.prompt,promptAvailability:cap.promptState??null,webGPU:cap.webgpu},webGPU:cap.adapter?{info:objectSnapshot(cap.adapter.info),features:[...cap.adapter.features].sort(),limits:objectSnapshot(cap.adapter.limits),isFallbackAdapter:cap.adapter.isFallbackAdapter??null}:null,storageEstimate:storage}};
+async function detect() {
+  cap.platform = platform();
+  cap.browser = browser();
+  cap.mobile = /ios|android/.test(cap.platform);
+  cap.ram = navigator.deviceMemory || null;
+  cap.cores = navigator.hardwareConcurrency || null;
+  cap.wasm = typeof WebAssembly === 'object';
+  cap.prompt = 'LanguageModel' in self;
+  if (cap.prompt) {
+    try { cap.promptState = await LanguageModel.availability(PROMPT_OPTIONS); }
+    catch (error) {
+      cap.promptState = 'error: ' + error.message;
+      reportError('Prompt API availability failed', error);
+    }
+  }
+  cap.webgpu = !!navigator.gpu;
+  if (cap.webgpu) {
+    try {
+      cap.adapter = await navigator.gpu.requestAdapter({powerPreference: 'high-performance'});
+      cap.webgpu = !!cap.adapter;
+      if (cap.adapter) {
+        const info = cap.adapter.info || {};
+        cap.gpu = [info.vendor, info.architecture, info.device, info.description].filter(Boolean).join(' · ') || 'identity hidden';
+        cap.f16 = cap.adapter.features.has('shader-f16');
+        cap.maxStorage = Number(cap.adapter.limits.maxStorageBufferBindingSize || 0);
+      }
+    } catch (error) {
+      cap.webgpu = false;
+      cap.gpuError = error.message;
+      reportError('WebGPU detection failed; CPU path still available', error);
+    }
+  }
+  cap.grade = grade();
+  await refreshLocalModels();
+  render();
+  $('#raw').textContent = JSON.stringify(await rawSnapshot(), null, 2);
+}
+function nativeHint(){let p=cap.platform;if(p==='ios'||p==='macos')return `<div class="native"><b>Apple Foundation Models</b><small>A native Swift app may use Apple’s on-device model on supported Apple Intelligence devices. This webpage cannot verify eligibility or availability.</small><small>Rough position: specialized small local model around the 3B class.</small><a href="https://developer.apple.com/documentation/foundationmodels" target="_blank" rel="noopener">Official Apple documentation ↗</a></div>`;if(p==='android')return `<div class="native"><b>Gemini Nano through ML Kit / AICore</b><small>A native Android app may use on-device generative APIs on supported devices. This webpage cannot verify the installed model or eligibility.</small><a href="https://developers.google.com/ml-kit/genai" target="_blank" rel="noopener">Official Android documentation ↗</a></div>`;if(p==='windows')return `<div class="native"><b>Phi Silica through Windows AI APIs</b><small>A native Windows app may use Microsoft’s on-device SLM on supported PCs. This is separate from Edge’s browser model.</small><a href="https://learn.microsoft.com/windows/ai/apis/phi-silica" target="_blank" rel="noopener">Official Microsoft documentation ↗</a></div>`;return `<div class="native"><b>No standardized OS model identified</b><small>Native applications can still bundle or connect to a local model runtime.</small></div>`}
+function render(){let bm=browserMeta[cap.browser]||browserMeta.other;$('#hardware').innerHTML=row('Platform',cap.platform)+row('Browser',cap.browser)+row('Logical CPU threads',cap.cores??'hidden')+row('Approx. RAM',cap.ram?cap.ram+' GB (coarsened)':'hidden')+row('GPU',cap.gpu||'not exposed')+row('16-bit GPU math',cap.f16?'available':'no / hidden')+row('Largest GPU data block',cap.maxStorage?Math.round(cap.maxStorage/1048576)+' MiB':'not exposed');$('#apis').innerHTML=api('Built-in browser AI',cap.prompt&&cap.promptState!=='unavailable',cap.prompt?`${bm.name}: ${cap.promptState}.`:`${bm.detail}`,!cap.prompt)+api('GPU compute for websites',cap.webgpu,cap.webgpu?'WebGPU can run downloadable models on the GPU.':'No usable WebGPU adapter returned.')+api('Portable CPU execution',cap.wasm,'WebAssembly can run a tiny downloadable model on the CPU.')+api('Browser model storage','storage'in navigator,'Downloaded files can be cached for later visits.');$('#native').innerHTML=nativeHint();$('#fits').innerHTML=[WASM,...MODELS].map(m=>{let f=fit(m),mem=m===WASM?'~140 MB download; CPU memory':`~${m.mb} MB download; ~${cap.f16?m.v16:m.v32} MB working GPU memory`;return `<div class="fitrow"><div class="fithead"><b>${m.label}</b><span class="fit ${f}">${fw(f)}</span></div><small>${m.kind} · ${m.p}B · ${mem}</small><small>Good: ${m.good}. Struggles: ${m.bad}.</small></div>`}).join('');$('#abilities').innerHTML='<span class="tag yes">CPU/WASM baseline</span>'+(cap.webgpu?'<span class="tag yes">local GPU chat</span>':'<span class="tag maybe">no GPU path</span>')+(cap.prompt&&cap.promptState!=='unavailable'?'<span class="tag yes">browser model</span>':'');$('#browserNote').innerHTML=`${esc(bm.detail)} <a href="${bm.link}" target="_blank" rel="noopener">Official information ↗</a>`;fill()}
+function fill(){model.innerHTML='';let bm=browserMeta[cap.browser]||browserMeta.other;let o=cap.prompt?new Option(`${bm.name} · ${cap.promptState}`,'__prompt'):new Option('Built-in browser AI · not exposed','__prompt');if(!cap.prompt||cap.promptState==='unavailable'||String(cap.promptState).startsWith('error'))o.disabled=true;model.add(o);model.add(new Option('CPU FLOOR · SmolLM2 135M · ~140 MB','wasm'));for(let m of MODELS)model.add(new Option(`${fw(fit(m)).toUpperCase()} · ${m.label} · ~${m.mb} MB`,m.key));model.onchange=modelChanged;describe()}
+async function refreshLocalModels() {
+  localModels.clear();
+  if (!('caches' in self)) return;
+  const names = await caches.keys();
+  const files = new Set();
+  for (const name of ['transformers-cache', 'webllm/model', 'webllm/config', 'webllm/wasm']) {
+    if (!names.includes(name)) continue;
+    const cache = await caches.open(name);
+    for (const request of await cache.keys()) files.add(request.url);
+  }
+  const wasmRoot = `https://huggingface.co/${WASM.id}/resolve/main/`;
+  localModels.set('wasm', {
+    local: ['config.json', 'tokenizer.json', 'tokenizer_config.json', 'onnx/model_quantized.onnx'].every(file => files.has(wasmRoot + file)),
+    removable: [...files].some(url => url.startsWith(wasmRoot))
+  });
+  for (const m of MODELS) {
+    const id = cap.f16 ? m.f16 : m.f32;
+    const root = `https://huggingface.co/mlc-ai/${id}/resolve/main/`;
+    let local = false;
+    if (files.has(root + 'tensor-cache.json')) {
+      const cache = await caches.open('webllm/model');
+      const manifest = await (await cache.match(root + 'tensor-cache.json')).json();
+      if (!Array.isArray(manifest.records) || !manifest.records.length) throw new Error(`Invalid cached manifest: ${id}`);
+      local = manifest.records.every(record => typeof record.dataPath === 'string' && files.has(new URL(record.dataPath, root).href))
+        && files.has(root + 'tokenizer.json') && files.has(root + 'mlc-chat-config.json');
+    }
+    localModels.set(m.key, {
+      local,
+      removable: [m.f16, m.f32].some(variant => [...files].some(url => url.startsWith(`https://huggingface.co/mlc-ai/${variant}/`)))
+    });
+  }
+}
+async function removeLocalModel() {
+  if (phase !== 'idle' || !localModels.get(model.value)?.removable) return;
+  const key = model.value;
+  phase = 'removing';
+  controls();
+  try {
+    if (engine) {
+      await releaseEngine();
+      backend = selected = null;
+      clearConversation('Model removed from this session.');
+    }
+    if (key === 'wasm') {
+      const cache = await caches.open('transformers-cache');
+      const root = `https://huggingface.co/${WASM.id}/`;
+      for (const request of await cache.keys()) {
+        if (request.url.startsWith(root)) await cache.delete(request);
+      }
+    } else {
+      webllm ??= await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.87/+esm');
+      const m = MODELS.find(item => item.key === key);
+      for (const id of [m.f16, m.f32]) await webllm.deleteModelAllInfoInCache(id);
+    }
+    status('Local download removed. Load selected to download again.');
+  } catch (error) {
+    reportError('Could not remove local download', error);
+  } finally {
+    try { await refreshLocalModels(); }
+    catch (error) { reportError('Could not check local downloads', error); }
+    phase = 'idle';
+    controls();
+  }
+}
+function controls() {
+  const busy = phase !== 'idle';
+  model.disabled = busy;
+  loadBtn.disabled = busy || !!engine || (!['wasm', '__prompt'].includes(model.value) && !cap.webgpu);
+  input.disabled = busy;
+  // One button: Send when idle, Stop while generating.
+  const stopping = !!active?.record.cancellation.requestedAt;
+  sendBtn.textContent = active ? 'Stop' : 'Send';
+  sendBtn.classList.toggle('stop', !!active);
+  sendBtn.disabled = active ? stopping : busy || !engine;
+  $('#export').disabled = !runs.length && !events.length;
+  loadBtn.hidden = !!engine && phase !== 'loading';
+  $('#runStatus').hidden = !engine && !runs.length && !events.length;
+  $('.bar').hidden = phase !== 'loading';
+  for (const button of $('#prompts').querySelectorAll('button')) button.disabled = busy;
+  $('#clear').disabled = busy || !engine;
+  $('#clear').hidden = !engine;
+  for (const option of model.options) {
+    option.dataset.label ??= option.textContent;
+    const available = !!engine && option.value === selected
+      || option.value === '__prompt' && cap.promptState === 'available'
+      || localModels.get(option.value)?.local;
+    option.textContent = option.dataset.label + (available ? ' · local' : '');
+  }
+  $('#remove').hidden = !localModels.get(model.value)?.removable;
+  $('#remove').disabled = busy;
+}
+function reportError(stage, error) {
+  const detail = {stage, timestamp: new Date().toISOString(), backend, selection: selected, modelId: loadedModelId, name: error?.name || 'Error', message: String(error?.message || error)};
+  events.push(detail);
+  console.error(stage, error);
+  $('#runStatus').textContent = `${stage}: ${detail.message}`;
+  controls();
+  return detail;
+}
+function clearConversation(message = 'New conversation.') {
+  freshHistory();
+  needsFresh = false;
+  chat.replaceChildren();
+  add('sys', message);
+  metrics();
+}
+async function releaseEngine() {
+  if (!engine) return;
+  if (backend === 'webllm') await engine.unload();
+  else if (backend === 'prompt') engine.destroy();
+  else engine.worker.terminate();
+  engine = null;
+  loadedModelId = null;
+}
+async function resetBackend() {
+  if (backend === 'webllm') await engine.resetChat();
+  else if (backend === 'prompt') {
+    engine.destroy();
+    engine = null;
+    engine = await createPromptSession();
+  }
+  // WASM pipeline calls receive the full message list and keep no conversation.
+  clearConversation();
+}
+async function reset() {
+  if (phase !== 'idle' || !engine) return false;
+  phase = 'resetting';
+  controls();
+  try {
+    await resetBackend();
+    $('#runStatus').textContent = 'New conversation started.';
+    return true;
+  } catch (error) {
+    needsFresh = true;
+    reportError('New conversation failed; try again or reload', error);
+    return false;
+  } finally {
+    phase = 'idle';
+    controls();
+  }
+}
+async function modelChanged() {
+  if (phase !== 'idle') return;
+  phase = 'switching';
+  controls();
+  try {
+    await releaseEngine();
+    backend = selected = null;
+    clearConversation('Model selection changed. Load it to start a fresh conversation.');
+    prog.style.width = '0%';
+    describe();
+  } catch (error) {
+    model.value = selected;
+    reportError('Model release failed', error);
+  } finally {
+    phase = 'idle';
+    controls();
+  }
+}
+function describe() {
+  const value = model.value;
+  if (value === '__prompt') {
+    status('Built-in Prompt API: browser-managed model; exact identity and generation limits are not exposed. English text requested.');
+  } else if (value === 'wasm') {
+    status('<strong>CPU/WASM:</strong> about 140 MB download. Runs in a worker so the task controls remain responsive.');
+  } else {
+    const m = MODELS.find(item => item.key === value);
+    status(cap.webgpu ? `<strong>${esc(m.label)}:</strong> ~${m.mb} MB download; working-memory figures are heuristics, not verified fit.` : 'WebGPU unavailable. Choose CPU/WASM.');
+  }
+}
+function progress(p, text, name) {
+  const percent = Math.round((p || 0) * 100);
+  prog.style.width = percent + '%';
+  status(`<strong>${esc(name)}:</strong> ${esc(text || 'loading')} · ${percent}%`);
+}
+async function createPromptSession() {
+  return LanguageModel.create({
+    ...PROMPT_OPTIONS,
+    initialPrompts: [{role: 'system', content: SYSTEM}],
+    monitor(monitor) {
+      monitor.addEventListener('downloadprogress', event => progress(event.loaded, 'browser download', 'Browser AI'));
+    }
+  });
+}
+async function loadWeb(m) {
+  webllm = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.87/+esm');
+  const ids = new Set(webllm.prebuiltAppConfig.model_list.map(item => item.model_id));
+  const preferred = cap.f16 ? m.f16 : m.f32;
+  const id = ids.has(preferred) ? preferred : m.f32;
+  if (!ids.has(id)) throw new Error('Selected model is absent from the pinned WebLLM model list.');
+  // No silent precision fallback: a failed load is evidence, not another run.
+  loadedModelId = id;
+  return webllm.CreateMLCEngine(id, {initProgressCallback: r => progress(r.progress, r.text, m.label)});
+}
+// A Blob worker keeps the app in one HTML file; termination is the WASM stop fallback.
+function wasmWorker() {
+  let pipe, library, stopping;
+  self.onmessage = async ({data}) => {
+    if (data.type === 'stop') {
+      stopping?.interrupt();
+      return;
+    }
+    try {
+      if (data.type === 'load') {
+        library = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1');
+        library.env.allowLocalModels = false;
+        // GitHub Pages cannot supply the isolation headers required by WASM threads.
+        library.env.backends.onnx.wasm.numThreads = 1;
+        pipe = await library.pipeline('text-generation', data.model, {
+          device: 'wasm', dtype: 'q8',
+          progress_callback: progress => self.postMessage({type: 'progress', progress})
+        });
+        self.postMessage({type: 'ready'});
+      } else if (data.type === 'generate') {
+        stopping = new library.InterruptableStoppingCriteria();
+        let count = 0, lastToken = null;
+        const streamer = new library.TextStreamer(pipe.tokenizer, {
+          skip_prompt: true,
+          callback_function: text => self.postMessage({type: 'text', text}),
+          token_callback_function: tokens => {
+            count += tokens.length;
+            lastToken = Number(tokens.at(-1));
+            self.postMessage({type: 'tokens', count});
+          }
+        });
+        const result = await pipe(data.messages, {...data.settings, streamer, stopping_criteria: [stopping]});
+        const generated = result[0].generated_text;
+        const answer = Array.isArray(generated) ? generated.at(-1).content : String(generated);
+        const eos = pipe.model.generation_config?.eos_token_id ?? pipe.model.config?.eos_token_id;
+        const ended = (Array.isArray(eos) ? eos : [eos]).includes(lastToken);
+        const finish = stopping.interrupted ? 'interrupted' : ended ? 'eos' : count >= data.settings.max_new_tokens ? 'length' : null;
+        self.postMessage({type: 'done', answer, count, finish});
+      }
+    } catch (error) {
+      self.postMessage({type: 'error', name: error.name, message: error.message});
+    }
+  };
+}
+function workerCall(handle, message, receive) {
+  return new Promise((resolve, reject) => {
+    handle.reject = reject;
+    handle.worker.onerror = event => reject(new Error(event.message || 'WASM worker failed'));
+    handle.worker.onmessage = ({data}) => {
+      if (data.type === 'error') reject(Object.assign(new Error(data.message), {name: data.name}));
+      else if (data.type === 'ready' || data.type === 'done') resolve(data);
+      else receive(data);
+    };
+    handle.worker.postMessage(message);
+  }).finally(() => { handle.reject = null; });
+}
+async function load() {
+  if (phase !== 'idle' || engine) return;
+  phase = 'loading';
+  selected = model.value;
+  controls();
+  prog.style.width = '1%';
+  try {
+    if (selected === '__prompt') {
+      backend = 'prompt';
+      engine = await createPromptSession();
+    } else if (selected === 'wasm') {
+      backend = 'wasm';
+      const url = URL.createObjectURL(new Blob([`(${wasmWorker.toString()})()`], {type: 'text/javascript'}));
+      try { engine = {worker: new Worker(url, {type: 'module'})}; }
+      finally { URL.revokeObjectURL(url); }
+      await workerCall(engine, {type: 'load', model: WASM.id}, data => {
+        const p = data.progress;
+        progress(p.progress == null ? 0 : p.progress / 100, p.status || p.file, WASM.label);
+      });
+      loadedModelId = WASM.id;
+    } else {
+      backend = 'webllm';
+      engine = await loadWeb(MODELS.find(item => item.key === selected));
+    }
+    prog.style.width = '100%';
+    status(`<strong>Ready:</strong> ${esc(loadedModelId || 'Built-in Prompt API (model identity undisclosed)')}`);
+    clearConversation('Model ready.');
+    $('#runStatus').textContent = 'Ready.';
+  } catch (error) {
+    reportError('Load failed', error);
+    try { await releaseEngine(); }
+    catch (releaseError) { reportError('Cleanup failed; reload page before retrying', releaseError); }
+    prog.style.width = '0%';
+    status('Load failed. See status and Export JSON for details.');
+  } finally {
+    try { await refreshLocalModels(); }
+    catch (error) { reportError('Could not check local downloads', error); }
+    phase = 'idle';
+    controls();
+  }
+}
+const knownNumber = value => Number.isFinite(value) ? value : null;
+const seconds = ms => `${(ms / 1000).toFixed(2)} s`;
+function metrics(record = null) {
+  $('.metrics').hidden = !record;
+  const speed = record && writingSpeed(record);
+  $('#mWrite').textContent = speed ? `${speed.value.toFixed(1)} tok/s` : '—';
+  $('#writeLabel').textContent = speed ? `Writing speed (${speed.source})` : 'Writing speed';
+  $('#mElapsed').textContent = record?.timings.elapsedMs == null ? '—' : seconds(record.timings.elapsedMs);
+  const first = record?.timings.firstTokenMs ?? record?.timings.firstTextMs;
+  $('#firstLabel').textContent = record?.backend === 'wasm' ? 'First token observed' : 'First text chunk (not TTFT)';
+  $('#mTtft').textContent = first == null ? 'Not observed' : `${Math.round(first)} ms`;
+  $('#mTokens').textContent = record?.outputTokens.value == null ? '—' : `${record.outputTokens.value} (${record.outputTokens.source})`;
+  const context = record?.context;
+  $('#mContext').textContent = context?.used == null ? 'Unknown; no estimated limit' : `${context.used}${context.limit == null ? '' : ' / ' + context.limit} (${context.source})`;
+}
+function updateRun(run) {
+  const r = run.record;
+  r.timings.elapsedMs = performance.now() - run.start;
+  metrics(r);
+  $('#runStatus').textContent = r.cancellation.requestedAt
+    ? `${r.status}: cancellation requested; awaiting generation call to settle. Inference cessation is not yet confirmed. Partial result can be exported.`
+    : 'Generating. Total time includes prompt processing; it is not decode time.';
+}
+async function requestStop() {
+  const run = active;
+  if (!run || run.record.cancellation.requestedAt) return;
+  const r = run.record;
+  r.status = 'stopped';
+  r.cancellation.requestedAt = new Date().toISOString();
+  r.cancellation.reason = 'stopped';
+  r.cancellation.method = backend === 'wasm' ? 'InterruptableStoppingCriteria; worker termination fallback' : backend === 'webllm' ? 'interruptGenerate' : 'AbortSignal';
+  controls();
+  updateRun(run);
+  try {
+    if (backend === 'prompt') run.controller.abort();
+    else if (backend === 'webllm') await engine.interruptGenerate();
+    else {
+      const handle = engine;
+      handle.worker.postMessage({type: 'stop'});
+      run.hardStop = setTimeout(() => {
+        if (active !== run) return;
+        handle.worker.terminate();
+        engine = null;
+        r.cancellation.cessation = 'WASM worker terminated; reload required';
+        handle.reject?.(new DOMException('WASM worker terminated after stop request', 'AbortError'));
+      }, 1000);
+    }
+  } catch (error) {
+    r.cancellation.error = reportError('Cancellation failed; generation may still be running', error);
+  }
+}
+function settingsFor(text) {
+  // No app output cap; Stop ends long answers. Transformers.js needs an explicit ceiling, so WASM uses its context size.
+  if (backend === 'wasm') return {max_new_tokens: WASM.ctx, temperature: 0.2, top_p: 0.9, do_sample: true, device: 'wasm', dtype: 'q8'};
+  if (backend === 'webllm') return {max_tokens: null, temperature: null, top_p: null, enable_thinking: MODELS.find(m => m.key === selected).noThink ? false : null};
+  return {max_tokens: null, temperature: knownNumber(engine.temperature), topK: knownNumber(engine.topK), samplingMode: engine.samplingMode ?? null, ...PROMPT_OPTIONS};
+}
+async function send() {
+  const text = input.value.trim();
+  if (phase !== 'idle' || !text || !engine) return;
+  phase = 'preparing';
+  controls();
+  const preparationStart = performance.now();
+  const record = {
+    id: runs.length + 1, promptVersion: text === SAVINGS_PROMPT ? 'monthly-savings-v1' : null,
+    submittedAt: new Date().toISOString(), startedAt: null, endedAt: null,
+    backend, runtimeVersion: backend === 'wasm' ? '3.8.1' : backend === 'webllm' ? '0.2.87' : null,
+    modelId: loadedModelId, selection: selected, modelState: 'loaded',
+    freshRequested: needsFresh, freshConversation: false,
+    prompt: text, messages: null, answer: '', rawAnswer: '', settings: null,
+    status: 'preparing', backendFinishReason: null,
+    timings: {preparationMs: null, elapsedMs: null, firstTokenMs: null, firstTextMs: null, backendDecodeTokensPerSecond: null, writingTokensPerSecond: null, writingSpeedSource: null},
+    outputTokens: {value: null, source: 'unknown'}, context: {used: null, limit: null, source: 'unknown'},
+    usage: null, error: null, check: null,
+    cancellation: {requestedAt: null, reason: null, method: null, cessation: 'not requested', error: null}
+  };
+  runs.push(record);
+  try {
+    // An interrupted or failed run leaves backend state uncertain, so restart before continuing.
+    if (record.freshRequested) await resetBackend();
+    record.freshConversation = history.length === 1;
+    record.settings = settingsFor(text);
+    record.messages = [...history.map(message => ({...message})), {role: 'user', content: text}];
+  } catch (error) {
+    record.status = 'error';
+    record.error = reportError('New conversation failed; request not sent', error);
+    record.endedAt = new Date().toISOString();
+    record.timings.preparationMs = performance.now() - preparationStart;
+    needsFresh = true;
+    phase = 'idle';
+    controls();
+    return;
+  }
+  record.timings.preparationMs = performance.now() - preparationStart;
+  input.value = '';
+  preview();
+  add('user', text);
+  const box = add('bot', '');
+  const run = {record, box, start: performance.now(), controller: new AbortController()};
+  active = run;
+  record.startedAt = new Date().toISOString();
+  record.status = 'running';
+  phase = 'generating';
+  controls();
+  updateRun(run);
+  run.clock = setInterval(() => updateRun(run), 250);
+  const append = text => {
+    if (!text) return;
+    if (record.timings.firstTextMs == null) record.timings.firstTextMs = performance.now() - run.start;
+    record.rawAnswer += text;
+    record.answer = backend === 'webllm' ? finalAnswer(record.rawAnswer) : record.rawAnswer;
+    box.textContent = record.answer;
+    if (chat.scrollHeight - chat.scrollTop - chat.clientHeight < 150) chat.scrollTop = chat.scrollHeight;
+  };
+  try {
+    if (backend === 'wasm') {
+      const {device, dtype, ...generation} = record.settings;
+      const result = await workerCall(engine, {type: 'generate', messages: record.messages, settings: generation}, data => {
+        if (data.type === 'text') append(data.text);
+        if (data.type === 'tokens') {
+          if (record.timings.firstTokenMs == null && data.count > 0) record.timings.firstTokenMs = performance.now() - run.start;
+          record.outputTokens = {value: data.count, source: 'observed token IDs'};
+        }
+      });
+      record.answer = result.answer;
+      record.rawAnswer = result.answer;
+      record.outputTokens = {value: result.count, source: 'token IDs (includes special tokens)'};
+      record.backendFinishReason = result.finish;
+    } else if (backend === 'webllm') {
+      const stream = await engine.chat.completions.create({
+        messages: record.messages,
+        // WebLLM can echo an empty thinking block even with thinking disabled.
+        ...(record.settings.enable_thinking === false && {extra_body: {enable_thinking: false}}),
+        stream: true, stream_options: {include_usage: true}
+      });
+      for await (const chunk of stream) {
+        // Stream initialization can clear an interrupt requested before prefill.
+        if (record.cancellation.requestedAt) await engine.interruptGenerate();
+        append(chunk.choices[0]?.delta?.content || '');
+        if (chunk.choices[0]?.finish_reason) record.backendFinishReason = chunk.choices[0].finish_reason;
+        if (chunk.usage) {
+          record.usage = chunk.usage;
+          const count = knownNumber(chunk.usage.completion_tokens);
+          if (count != null) record.outputTokens = {value: count, source: 'backend usage'};
+          record.context = {used: knownNumber(chunk.usage.total_tokens), limit: null, source: 'request usage, not cache occupancy'};
+          record.timings.backendDecodeTokensPerSecond = knownNumber(chunk.usage.extra?.decode_tokens_per_s);
+        }
+      }
+    } else {
+      // The current Prompt API streams incremental text chunks, not snapshots.
+      for await (const chunk of engine.promptStreaming(text, {signal: run.controller.signal})) append(chunk);
+      record.context = {used: knownNumber(engine.inputUsage), limit: knownNumber(engine.inputQuota), source: 'browser input quota units, not output tokens'};
+    }
+    if (!record.cancellation.requestedAt) {
+      record.status = record.backendFinishReason === 'length' ? 'length-limited'
+        : ['abort', 'interrupted'].includes(record.backendFinishReason) ? 'stopped'
+        : backend === 'prompt' || ['stop', 'eos'].includes(record.backendFinishReason) ? 'completed' : 'unknown';
+    }
+  } catch (error) {
+    record.error = {name: error.name || 'Error', message: String(error.message || error)};
+    if (!record.cancellation.requestedAt || error.name !== 'AbortError') {
+      record.status = 'error';
+      reportError('Generation failed; partial output retained', error);
+    }
+  } finally {
+    clearTimeout(run.hardStop);
+    clearInterval(run.clock);
+    record.endedAt = new Date().toISOString();
+    record.timings.elapsedMs = performance.now() - run.start;
+    if (record.cancellation.requestedAt && record.cancellation.cessation === 'not requested') {
+      record.cancellation.cessation = 'Generation call settled after request; no independent hardware confirmation';
+    }
+    if (record.outputTokens.value == null) {
+      record.outputTokens = {value: Math.round(record.answer.length / 4), source: 'estimate: characters / 4'};
+    }
+    needsFresh = !!record.cancellation.requestedAt || ['error', 'unknown', 'stopped'].includes(record.status);
+    if (!needsFresh) history = [...record.messages, {role: 'assistant', content: record.answer}];
+    box.textContent = record.answer || '(No output received.)';
+    const detail = document.createElement('div');
+    detail.className = 'msgmetrics';
+    const speed = writingSpeed(record);
+    record.timings.writingTokensPerSecond = speed?.value ?? null;
+    record.timings.writingSpeedSource = speed?.source ?? null;
+    record.check = ruleCheck(record);
+    detail.textContent = `${record.status} · total ${seconds(record.timings.elapsedMs)} · ${record.outputTokens.value} tokens (${record.outputTokens.source})`
+      + (speed ? ` · writing ${speed.value.toFixed(1)} tok/s (${speed.source})` : '')
+      + (record.error ? ` · ${record.error.name}: ${record.error.message}` : '')
+      + (record.cancellation.requestedAt ? ` · ${record.cancellation.cessation}` : '');
+    box.append(detail);
+    if (record.check) {
+      const check = document.createElement('div');
+      const failed = record.check.rules.filter(item => !item.pass).map(item => item.rule);
+      check.className = 'check ' + record.check.verdict.replace(' ', '-');
+      check.title = 'Automatic keyword/format rules, not a quality verdict.';
+      check.textContent = record.check.verdict === 'not checked' ? `Rule check: not checked (${record.status})`
+        : `Rule check: ${record.check.verdict.toUpperCase()} ${record.check.rules.length - failed.length}/${record.check.rules.length}` + (failed.length ? ` · missed: ${failed.join('; ')}` : '');
+      box.append(check);
+    }
+    $('#runStatus').textContent = detail.textContent + (needsFresh ? ' The next send starts a new conversation.' : backend === 'prompt' ? ' Stream closed; API exposes no finish reason or output cap.' : '');
+    metrics(record);
+    active = null;
+    phase = 'idle';
+    controls();
+  }
+}
+function exportResults() {
+  if (active) active.record.timings.elapsedMs = performance.now() - active.start;
+  const data = {
+    format: 'device-llm-lab-results-v1', exportedAt: new Date().toISOString(),
+    environment: {userAgent: navigator.userAgent, platform: cap.platform, browser: cap.browser, approximateRamGB: cap.ram, logicalCores: cap.cores, gpu: cap.gpu ?? null},
+    notes: 'Unknown fields are null. First text chunk is not token-level TTFT. Total response time includes prefill; not decode throughput. Fresh/reset excludes loading and is recorded separately. No independent inference-hardware stop confirmation.',
+    runs, events
+  };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `device-llm-lab-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function preview() {
+  $('#preview').hidden = !input.value.trim();
+  $('#promptPreview').textContent = input.value || 'Select a template or type below.';
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 240) + 'px';
+}
+for (const {name, prompt} of SAMPLES) {
+  const button = document.createElement('button');
+  button.className = 'chip';
+  button.textContent = name;
+  button.onclick = async () => {
+    if (phase !== 'idle') return;
+    if (engine && !await reset()) return;
+    input.value = prompt;
+    preview();
+    $('#preview').open = true;
+  };
+  if (name === SAMPLES[0].name) $('#prompts').prepend(button);
+  else $('#morePrompts').append(button);
+}
+loadBtn.onclick = load;
+sendBtn.onclick = () => active ? requestStop() : send();
+$('#clear').onclick = reset;
+$('#export').onclick = exportResults;
+$('#remove').onclick = removeLocalModel;
+input.oninput = preview;
+input.onkeydown = event => {
+  if (event.key === 'Enter' && !event.shiftKey && !matchMedia('(max-width:780px)').matches) {
+    event.preventDefault();
+    send();
+  }
+};
+detect().then(() => { phase = 'idle'; controls(); }).catch(error => {
+  reportError('Capability detection failed; reload page to retry', error);
+});
+</script></body></html>
